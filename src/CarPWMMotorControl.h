@@ -143,8 +143,8 @@ public:
     void rotate(int aRotationDegrees, turn_direction_t aTurnDirection = TURN_IN_PLACE, bool aUseSlowSpeed = false,
             void (*aLoopCallback)(void) = NULL);
 #else
-    void startRotate(int aRotationDegrees, turn_direction_t aTurnDirection, bool aUseSlowSpeed = true);
-    void rotate(int aRotationDegrees, turn_direction_t aTurnDirection = TURN_IN_PLACE, bool aUseSlowSpeed = true,
+    void startRotate(int aRotationDegrees, turn_direction_t aTurnDirection, bool aUseSlowSpeed = false);
+    void rotate(int aRotationDegrees, turn_direction_t aTurnDirection = TURN_IN_PLACE, bool aUseSlowSpeed = false,
             void (*aLoopCallback)(void) = NULL);
 #endif
 
@@ -201,7 +201,7 @@ public:
 #endif
 };
 
-extern CarPWMMotorControl RobotCarMotorControl;
+extern CarPWMMotorControl RobotCarPWMMotorControl;
 
 #endif /* CarPWMMotorControl_H_ */
 

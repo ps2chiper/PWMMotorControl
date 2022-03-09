@@ -40,7 +40,7 @@
 /*
  * The Car Control instance to be used by the main program
  */
-CarPWMMotorControl RobotCarMotorControl;
+CarPWMMotorControl RobotCarPWMMotorControl;
 
 //#define DEBUG // Only for development
 
@@ -102,11 +102,11 @@ void CarPWMMotorControl::init(uint8_t aRightMotorForwardPin, uint8_t aRightMotor
      * For slot type optocoupler interrupts on pin PD2 + PD3
      */
 #    if defined (INT0)
-    rightCarMotor.attachInterrupt(INT0);
-    leftCarMotor.attachInterrupt(INT1);
+    rightCarMotor.attachEncoderInterrupt(INT0);
+    leftCarMotor.attachEncoderInterrupt(INT1);
 #    else
-    rightCarMotor.attachInterrupt(2);
-    rightCarMotor.attachInterrupt(3);
+    rightCarMotor.attachEncoderInterrupt(0); // We use interrupt numbers here, not pin numbers
+    rightCarMotor.attachEncoderInterrupt(1);
 #    endif
 #  endif
 }
@@ -312,23 +312,11 @@ void CarPWMMotorControl::setStopMode(uint8_t aStopMode) {
     leftCarMotor.setStopMode(aStopMode);
 }
 
-/*
- * Stop car and reset all control values as SpeedPWM, distances, debug values etc. to 0x00
- */
 void CarPWMMotorControl::resetEncoderControlValues() {
 #ifdef USE_ENCODER_MOTOR_CONTROL
     rightCarMotor.resetEncoderControlValues();
     leftCarMotor.resetEncoderControlValues();
 #endif
-}
-
-/*
- * If motor is accelerating or decelerating then updateMotor needs to be called at a fast rate otherwise it will not work correctly
- * Used to suppress time consuming display of motor values
- */
-bool CarPWMMotorControl::isStateRamp() {
-    return (rightCarMotor.MotorRampState == MOTOR_STATE_RAMP_DOWN || rightCarMotor.MotorRampState == MOTOR_STATE_RAMP_UP
-            || leftCarMotor.MotorRampState == MOTOR_STATE_RAMP_DOWN || leftCarMotor.MotorRampState == MOTOR_STATE_RAMP_UP);
 }
 
 #ifdef USE_MPU6050_IMU
@@ -357,6 +345,13 @@ void CarPWMMotorControl::updateIMUData() {
 #endif
 
 /*
+ * Convenience funtion to be used as aLoopCallback
+ */
+void stopMotorAfter1Second() {
+
+}
+
+/*
  * @return true if not stopped (motor expects another update)
  */
 #define TURN_OVERRUN_HALF_ANGLE     1 // 1/2 degree overrun after stop(MOTOR_BRAKE)
@@ -369,11 +364,11 @@ void CarPWMMotorControl::updateIMUData() {
  */
 bool CarPWMMotorControl::updateMotors() {
 #ifdef USE_MPU6050_IMU
-    bool tReturnValue = true;
+    bool tReturnValue = !isStopped();
     updateIMUData();
     if (CarRequestedRotationDegrees != 0) {
         /*
-         * Using ramps for the rotation SpeedPWMs used makes no sense
+         * Rotation here. Using ramps for the rotation SpeedPWMs used makes no sense
          */
 #  ifdef TRACE
         Serial.println(CarTurnAngleHalfDegreesFromIMU);
@@ -383,13 +378,18 @@ bool CarPWMMotorControl::updateMotors() {
         int tRequestedRotationDegreesForCompare = abs(CarRequestedRotationDegrees * 2);
         int tCarTurnAngleHalfDegreesFromIMUForCompare = abs(CarTurnAngleHalfDegreesFromIMU);
         if ((tCarTurnAngleHalfDegreesFromIMUForCompare + TURN_OVERRUN_HALF_ANGLE) >= tRequestedRotationDegreesForCompare) {
+            /*
+             * End of rotation detected
+             */
             stop(MOTOR_BRAKE);
             CarRequestedRotationDegrees = 0;
             tReturnValue = false;
         } else if ((tCarTurnAngleHalfDegreesFromIMUForCompare + getTurnDistanceHalfDegree())
                 >= tRequestedRotationDegreesForCompare) {
-            Serial.print(getTurnDistanceHalfDegree());
-            // Reduce SpeedPWM just before target angle is reached if motors are not stopped we run for extra 2 to 4 degree
+//            Serial.print(getTurnDistanceHalfDegree());
+            /*
+             * Reduce SpeedPWM just before target angle is reached. If motors are not stopped, we run for extra 2 to 4 degree
+             */
             changeSpeedPWM(rightCarMotor.DriveSpeedPWM / 2);
         }
     } else {
@@ -587,6 +587,15 @@ bool CarPWMMotorControl::isStopped() {
     return (rightCarMotor.CurrentSpeedPWM == 0 && leftCarMotor.CurrentSpeedPWM == 0);
 }
 
+/*
+ * If motor is accelerating or decelerating then updateMotor needs to be called at a fast rate otherwise it will not work correctly
+ * Used to suppress time consuming display of motor values
+ */
+bool CarPWMMotorControl::isStateRamp() {
+    return (rightCarMotor.MotorRampState == MOTOR_STATE_RAMP_DOWN || rightCarMotor.MotorRampState == MOTOR_STATE_RAMP_UP
+            || leftCarMotor.MotorRampState == MOTOR_STATE_RAMP_DOWN || leftCarMotor.MotorRampState == MOTOR_STATE_RAMP_UP);
+}
+
 void CarPWMMotorControl::setFactorDegreeToMillimeter(float aFactorDegreeToMillimeter) {
 #ifndef USE_MPU6050_IMU
     FactorDegreeToMillimeter = aFactorDegreeToMillimeter;
@@ -705,7 +714,7 @@ void CarPWMMotorControl::startRotate(int aRotationDegrees, turn_direction_t aTur
 /**
  * @param  aRotationDegrees positive -> turn left (counterclockwise), negative -> turn right
  * @param  aTurnDirection direction of turn TURN_FORWARD, TURN_BACKWARD or TURN_IN_PLACE (default)
- * @param  aUseSlowSpeed true (default) -> use slower SpeedPWM (0.5 times DriveSpeedPWM) instead of DriveSpeedPWM for rotation to be more exact.
+ * @param  aUseSlowSpeed true (not default) -> use slower SpeedPWM (0.5 times DriveSpeedPWM) instead of DriveSpeedPWM for rotation to be more exact.
  *         Does not really work for 4WD cars.
  *         TODO remove? since only sensible for encoder motors.
  * @param  aLoopCallback avoid blocking and call aLoopCallback on waiting for stop

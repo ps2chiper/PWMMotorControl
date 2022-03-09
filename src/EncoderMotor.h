@@ -91,7 +91,7 @@ public:
 #else
     void handleEncoderInterrupt();
 #endif
-    void attachInterrupt(uint8_t aInterruptPinNumber);
+    void attachEncoderInterrupt(uint8_t aEncoderInterruptPinNumber);
     static void enableINT0AndINT1InterruptsOnRisingEdge();
 
     uint8_t getDirection();

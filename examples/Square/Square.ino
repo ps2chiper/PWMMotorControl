@@ -48,7 +48,6 @@
  */
 #define SPEED_PWM_COMPENSATION_RIGHT    0
 
-CarPWMMotorControl RobotCarPWMMotorControl;
 #define SIZE_OF_SQUARE_MILLIMETER  400
 
 void setup() {

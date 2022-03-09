@@ -107,11 +107,12 @@
 #endif
 
 #if !defined(FULL_BRIDGE_OUTPUT_MILLIVOLT)
+// Effective voltage available for the motor
 #define FULL_BRIDGE_OUTPUT_MILLIVOLT        (FULL_BRIDGE_INPUT_MILLIVOLT - FULL_BRIDGE_LOSS_MILLIVOLT)
 #endif
 
 #define DEFAULT_START_MILLIVOLT_MOSFET      1000 // Voltage where motors start to turn
-#define DEFAULT_START_MILLIVOLT_L298        1500 // For L298 the start voltage is higher (because of a higher ESR of the L298 bridge?)
+#define DEFAULT_START_MILLIVOLT_L298        1700 // For L298 the start voltage is higher (because of a higher ESR of the L298 bridge?)
 #define DEFAULT_DRIVE_MILLIVOLT             2000 // Drive voltage -motors default speed- is 2.0 volt
 #define SPEED_PWM_FOR_1_VOLT                ((1000 * MAX_SPEED_PWM) / FULL_BRIDGE_OUTPUT_MILLIVOLT)
 #define SPEED_FOR_8_VOLT                    ((8000 * MAX_SPEED_PWM) / FULL_BRIDGE_OUTPUT_MILLIVOLT)

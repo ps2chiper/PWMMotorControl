@@ -47,7 +47,7 @@
  * Motor Control
  * PIN  I/O Function
  *   2  I   Right motor encoder interrupt input
- *   3  I   Left motor encoder interrupt input
+ *   3  I   Left motor encoder interrupt input / fallback to US distance sensor if IR distance sensor available
  *   4  O   Right motor fwd
  *   5  O   Right motor PWM
  *   6  O   Left motor PWM
@@ -62,9 +62,9 @@
  *  13  O   Laser power
  *
  * PIN  I/O Function
- *  A0  O   US trigger (and echo in 1 pin US sensor mode) "URF 01 +" Connector on the Arduino Sensor Shield
+ *  A0  O   US trigger (and echo in 1 pin US sensor mode) "URF 01 +" connector on the Arduino Sensor Shield
  *  A1  I   US echo / IR distance if motor shield; requires no or 1 pin ultrasonic sensor if motor shield
- *  A2  I   VIN/11, 1MOhm to VIN, 100kOhm to ground
+ *  A2  I   VIN/11, 1MOhm to VIN, 100kOhm to ground - required for MONITOR_VIN_VOLTAGE
  *  A3  I   IR distance
  *  A4  SDA I2C for motor shield / VL35L1X TOF sensor / MPU6050 accelerator and gyroscope
  *  A5  SCL I2C for motor shield / VL35L1X TOF sensor / MPU6050 accelerator and gyroscope
@@ -75,6 +75,11 @@
 #if defined(USE_ENCODER_MOTOR_CONTROL)
 #define RIGHT_MOTOR_INTERRUPT       INT0 // Pin 2
 #define LEFT_MOTOR_INTERRUPT        INT1 // Pin 3
+#else
+#if defined(CAR_HAS_IR_DISTANCE_SENSOR)
+#define US_DISTANCE_SENSOR_ENABLE_PIN   3 // If this pin is connected to ground, use the US distance sensor instead of the IR distance sensor
+#endif
+
 #endif
 
 #if defined(USE_ADAFRUIT_MOTOR_SHIELD)
@@ -111,10 +116,11 @@
 #endif
 #define PIN_IR_DISTANCE_SENSOR     A3 // Sharp IR distance sensor
 
-#if defined(MONITOR_VIN_VOLTAGE)
+#if defined(CAR_HAS_VIN_VOLTAGE_DIVIDER)
 // Pin A0 for VCC monitoring - ADC channel 2
 // Assume an attached resistor network of 100k / 10k from VCC to ground (divider by 11)
 #define VIN_11TH_IN_CHANNEL         2 // = A2
+#define PIN_VIN_11TH_IN            A2
 #endif
 
 #if defined(LASER_MOUNTED)

@@ -83,7 +83,7 @@ void EncoderMotor::init(uint8_t aForwardPin, uint8_t aBackwardPin, uint8_t aPWMP
 void EncoderMotor::init(uint8_t aForwardPin, uint8_t aBackwardPin, uint8_t aPWMPin, uint8_t aInterruptNumber) {
     PWMDcMotor::init(aForwardPin, aBackwardPin, aPWMPin);
     resetEncoderControlValues();
-    attachInterrupt(aInterruptNumber);
+    attachEncoderInterrupt(aInterruptNumber);
 }
 #endif
 
@@ -366,7 +366,7 @@ void EncoderMotor::initEncoderControlValues() {
  * We can not use both edges since the on and off times of the opto interrupter are too different
  * aInterruptNumber can be one of INT0 (at pin D2) or INT1 (at pin D3) for Atmega328
  */
-void EncoderMotor::attachInterrupt(uint8_t aInterruptNumber) {
+void EncoderMotor::attachEncoderInterrupt(uint8_t aInterruptNumber) {
 #ifdef EICRA
     if (aInterruptNumber > 1) {
         return;
@@ -388,7 +388,7 @@ void EncoderMotor::attachInterrupt(uint8_t aInterruptNumber) {
     }
 #else
 #error Encoder interrupts for ESP32 not yet supported
-    attachInterrupt(aInterruptNumber, handleEncoderInterrupt, RISING);
+    attachEncoderInterrupt(aInterruptNumber, handleEncoderInterrupt, RISING);
 #endif
 }
 
