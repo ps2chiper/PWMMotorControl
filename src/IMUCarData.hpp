@@ -488,7 +488,8 @@ void IMUCarData::initMPU6050FifoForCarData() {
 void IMUCarData::initWire() {
     Wire.begin();
     Wire.setClock(400000);
-    Wire.setWireTimeout(5000); // Sets timeout to 5 ms. default is 25 ms.
+    // STM32 does not support setWireTimeout to my knowledge. 
+    //Wire.setWireTimeout(5000); // Sets timeout to 5 ms. default is 25 ms.
 }
 
 void IMUCarData::initMPU6050() {

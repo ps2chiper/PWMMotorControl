@@ -37,16 +37,16 @@
 /*
  * 20 slot Encoder generates 4 to 5 Hz at min speed and 110 Hz at max speed => 200 to 8 ms per period
  */
-#define ENCODER_COUNTS_PER_FULL_ROTATION    20
-#define ENCODER_SENSOR_TIMEOUT_MILLIS       400L // Timeout for encoder ticks if motor is running
-#define ENCODER_SENSOR_RING_MILLIS          4
+#define ENCODER_COUNTS_PER_FULL_ROTATION 20
+#define ENCODER_SENSOR_TIMEOUT_MILLIS 400L // Timeout for encoder ticks if motor is running
+#define ENCODER_SENSOR_RING_MILLIS 4
 
 /*
  * Some factors depending on wheel diameter and encoder resolution
  */
-#if ! defined(FACTOR_COUNT_TO_MILLIMETER_INTEGER_DEFAULT)
+#if !defined(FACTOR_COUNT_TO_MILLIMETER_INTEGER_DEFAULT)
 // Exact value is 220 mm / 20 = 11
-#define FACTOR_COUNT_TO_MILLIMETER_INTEGER_DEFAULT  ((DEFAULT_CIRCUMFERENCE_MILLIMETER + (ENCODER_COUNTS_PER_FULL_ROTATION / 2)) / ENCODER_COUNTS_PER_FULL_ROTATION) // = 11
+#define FACTOR_COUNT_TO_MILLIMETER_INTEGER_DEFAULT ((DEFAULT_CIRCUMFERENCE_MILLIMETER + (ENCODER_COUNTS_PER_FULL_ROTATION / 2)) / ENCODER_COUNTS_PER_FULL_ROTATION) // = 11
 #endif
 
 /*
@@ -55,9 +55,9 @@
  */
 #define SPEED_SCALE_VALUE ((100L * DEFAULT_CIRCUMFERENCE_MILLIMETER) / ENCODER_COUNTS_PER_FULL_ROTATION) // 1100
 
-class EncoderMotor: public PWMDcMotor {
+class EncoderMotor : public PWMDcMotor
+{
 public:
-
     EncoderMotor();
 #ifdef USE_ADAFRUIT_MOTOR_SHIELD
     void init(uint8_t aMotorNumber);
@@ -68,7 +68,7 @@ public:
     void init(uint8_t aForwardPin, uint8_t aBackwardPin, uint8_t aPWMPin);
     void init(uint8_t aForwardPin, uint8_t aBackwardPin, uint8_t aPWMPin, uint8_t aInterruptNumber);
 #endif
-//    virtual ~EncoderMotor();
+    //    virtual ~EncoderMotor();
 
     /*
      * Functions for going a fixed distance, they "overwrite" PWMDCMotor functions
@@ -91,8 +91,9 @@ public:
 #else
     void handleEncoderInterrupt();
 #endif
+    static void ISR0();
+    static void ISR1();
     void attachEncoderInterrupt(uint8_t aEncoderInterruptPinNumber);
-    static void enableINT0AndINT1InterruptsOnRisingEdge();
 
     uint8_t getDirection();
     unsigned int getDistanceMillimeter();
@@ -114,7 +115,7 @@ public:
     void resetSpeedValues();
 
 #ifdef ENABLE_MOTOR_LIST_FUNCTIONS
-    void  AddToMotorList();
+    void AddToMotorList();
     /*
      * Static convenience functions affecting all motors. If you have 2 motors, better use CarControl
      */
@@ -137,7 +138,7 @@ public:
     static EncoderMotor *sMotorControlListStart; // Root pointer to list of all motorControls
     static uint8_t sNumberOfMotorControls;
 
-    EncoderMotor * NextMotorControl;
+    EncoderMotor *NextMotorControl;
 #endif
 
     /**************************************************************
@@ -164,19 +165,17 @@ public:
     volatile unsigned long EncoderInterruptDeltaMillis; // Used to get speed
 #ifdef SUPPORT_AVERAGE_SPEED
     volatile unsigned int EncoderInterruptMillisArray[AVERAGE_SPEED_BUFFER_SIZE]; // store for 20 deltas
-    volatile uint8_t MillisArrayIndex; // Index of the next value to write  == the oldest value to overwrite. 0 to 20|(AVERAGE_SPEED_BUFFER_SIZE-1)
-    volatile bool AverageSpeedIsValid; // true if 11 values are written since last timeout
+    volatile uint8_t MillisArrayIndex;                                            // Index of the next value to write  == the oldest value to overwrite. 0 to 20|(AVERAGE_SPEED_BUFFER_SIZE-1)
+    volatile bool AverageSpeedIsValid;                                            // true if 11 values are written since last timeout
 #endif
 
     // do not delete it!!! It must be the last element in structure and is required for stopMotorAndReset()
     unsigned int Debug;
-
 };
 
-extern EncoderMotor * sPointerForInt0ISR;
-extern EncoderMotor * sPointerForInt1ISR;
+extern EncoderMotor *sPointerForInt0ISR;
+extern EncoderMotor *sPointerForInt1ISR;
 
 #endif /* SRC_ENCODERMOTORCONTROL_H_ */
 
 #pragma once
-
