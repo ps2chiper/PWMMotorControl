@@ -71,7 +71,7 @@ void CarPWMMotorControl::init()
 #ifdef USE_ENCODER_MOTOR_CONTROL
     leftCarMotor.init(1, INT1);
     rightCarMotor.init(2, INT0);
-#else
+#else // USE_ENCODER_MOTOR_CONTROL
     leftCarMotor.init(1);
     rightCarMotor.init(2);
 #endif
@@ -80,14 +80,15 @@ void CarPWMMotorControl::init()
     CarRequestedRotationDegrees = 0;
     CarRequestedDistanceMillimeter = 0;
     IMUData.initMPU6050FifoForCarData();
-#else
+#else // USE_MPU6050_IMU
 #if defined(CAR_HAS_4_WHEELS)
     FactorDegreeToMillimeter = FACTOR_DEGREE_TO_MILLIMETER_4WD_CAR_DEFAULT;
-#else
+#else // (CAR_HAS_4_WHEELS)
     FactorDegreeToMillimeter = FACTOR_DEGREE_TO_MILLIMETER_2WD_CAR_DEFAULT;
-#endif
-#endif
+#endif 
+
 }
+#endif
 
 #else // USE_ADAFRUIT_MOTOR_SHIELD
 void CarPWMMotorControl::init(uint8_t aRightMotorForwardPin, uint8_t aRightMotorBackwardPin, uint8_t aRightPWMPin,
@@ -102,22 +103,18 @@ void CarPWMMotorControl::init(uint8_t aRightMotorForwardPin, uint8_t aRightMotor
     CarRequestedDistanceMillimeter = 0;
     IMUData.initMPU6050FifoForCarData();
 
-#else
+#else // USE_MPU6050_IMU
     FactorDegreeToMillimeter = FACTOR_DEGREE_TO_MILLIMETER_DEFAULT;
-#endif
+#endif 
 #ifdef USE_ENCODER_MOTOR_CONTROL
     /*
      * For slot type optocoupler interrupts on pin PD2 + PD3
      */
-#if defined(INT0)
-    rightCarMotor.attachEncoderInterrupt(INT0);
-    leftCarMotor.attachEncoderInterrupt(INT1);
-#else
-    rightCarMotor.attachEncoderInterrupt(0); // We use interrupt numbers here, not pin numbers
-    rightCarMotor.attachEncoderInterrupt(1);
-#endif
-#endif
+    rightCarMotor.attachEncoderInterrupt(RIGHT_MOTOR_INTERRUPT); // We use interrupt numbers here, not pin numbers
+    leftCarMotor.attachEncoderInterrupt(LEFT_MOTOR_INTERRUPT);
+#endif // USE_ENCODER_MOTOR_CONTROL
 }
+
 
 #ifdef USE_ENCODER_MOTOR_CONTROL
 /*
@@ -134,12 +131,12 @@ void CarPWMMotorControl::init(uint8_t aRightMotorForwardPin, uint8_t aRightMotor
     CarRequestedRotationDegrees = 0;
     CarRequestedDistanceMillimeter = 0;
     IMUData.initMPU6050FifoForCarData();
-#else
+#else // USE_MPU6050_IMU
     FactorDegreeToMillimeter = FACTOR_DEGREE_TO_MILLIMETER_DEFAULT;
 #endif
 }
 #endif // USE_ENCODER_MOTOR_CONTROL
-#endif // USE_ADAFRUIT_MOTOR_SHIELD
+#endif // !USE_ADAFRUIT_MOTOR_SHIELD
 
 /*
  * Sets default values for min and max speed, factor for distance to time conversion for non encoder motors and reset speed compensation
@@ -325,7 +322,6 @@ void CarPWMMotorControl::setSpeedPWM(int aRequestedSpeedPWM)
 uint8_t CarPWMMotorControl::getCarDirectionOrBrakeMode()
 {
     return CarDirectionOrBrakeMode;
-    ;
 }
 
 void CarPWMMotorControl::readMotorValuesFromEeprom()
@@ -398,7 +394,7 @@ void CarPWMMotorControl::updateIMUData()
         }
     }
 }
-#endif
+#endif // USE_MPU6050_IMU
 
 /*
  * Convenience funtion to be used as aLoopCallback
@@ -431,7 +427,7 @@ bool CarPWMMotorControl::updateMotors()
 #ifdef TRACE
         Serial.println(CarTurnAngleHalfDegreesFromIMU);
         delay(10);
-#endif
+#endif // TRACE
         // putting abs(CarTurnAngleHalfDegreesFromIMU) also into a variable increases code size by 8
         int tRequestedRotationDegreesForCompare = abs(CarRequestedRotationDegrees * 2);
         int tCarTurnAngleHalfDegreesFromIMUForCompare = abs(CarTurnAngleHalfDegreesFromIMU);
@@ -470,7 +466,7 @@ bool CarPWMMotorControl::updateMotors()
                 Serial.print(rightCarMotor.MotorRampState);
                 Serial.print(F(" Ns="));
                 Serial.println(rightCarMotor.CurrentSpeedPWM);
-#endif
+#endif // DEBUG
                 if (CarDistanceMillimeterFromIMU >= CarRequestedDistanceMillimeter)
                 {
                     CarRequestedDistanceMillimeter = 0;
@@ -846,14 +842,14 @@ unsigned int CarPWMMotorControl::getDistanceMillimeter()
     return (rightCarMotor.getDistanceMillimeter());
 }
 
-#else
+#else // USE_ENCODER_MOTOR_CONTROL
 void CarPWMMotorControl::setMillimeterPerSecondForFixedDistanceDriving(uint16_t aMillimeterPerSecond)
 {
     rightCarMotor.setMillimeterPerSecondForFixedDistanceDriving(aMillimeterPerSecond);
     leftCarMotor.setMillimeterPerSecondForFixedDistanceDriving(aMillimeterPerSecond);
 }
 
-#endif // USE_ENCODER_MOTOR_CONTROL
+#endif 
 
 #if defined(USE_ENCODER_MOTOR_CONTROL) || defined(USE_MPU6050_IMU)
 unsigned int CarPWMMotorControl::getBrakingDistanceMillimeter()
@@ -873,7 +869,8 @@ uint8_t CarPWMMotorControl::getTurnDistanceHalfDegree()
     uint8_t tCarTurn2DegreesPerSecondFromIMU = CarTurn2DegreesPerSecondFromIMU;
     return ((tCarTurn2DegreesPerSecondFromIMU * tCarTurn2DegreesPerSecondFromIMU) / 20);
 }
-#endif
+#endif // USE_MPU6050_IMU
+//#endif // (USE_ENCODER_MOTOR_CONTROL) || defined(USE_MPU6050_IMU)
 
 ///*
 // * Generates a rising ramp and detects the first movement -> this sets dead band / minimum SpeedPWM

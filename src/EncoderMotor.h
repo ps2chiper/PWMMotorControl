@@ -82,6 +82,8 @@ public:
      * Functions especially for encoder motors
      */
     void synchronizeMotor(EncoderMotor *aOtherMotorControl, unsigned int aCheckInterval); // Computes motor speed compensation value in order to go exactly straight ahead
+    void wheelGoDistanceTicks(int aRequestedDistanceTicks, uint8_t aRequestedSpeedPWM, uint8_t aRequestedDirection); 
+
 
     /*
      * Encoder interrupt handling
@@ -153,6 +155,9 @@ public:
     /*
      * Distance optocoupler impulse counter. It is reset at startGoDistanceCount if motor was stopped.
      */
+    volatile bool stopFlag;
+    volatile unsigned int startCount;
+    volatile unsigned int stopCount;
     volatile unsigned int EncoderCount;
     volatile unsigned int LastRideEncoderCount; // count of last ride - from start of MOTOR_STATE_RAMP_UP to next MOTOR_STATE_RAMP_UP
     // Flag e.g. for display update control

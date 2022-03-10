@@ -48,6 +48,10 @@
 #include "analogWrite.h" // from e.g. ESP32Servo library
 #endif
 
+#if defined(_STM32_DEF_) // I should be more specific to the board.
+#include <EEPROM.h> // Support for STM32 EEPROM emulation. 
+#endif
+
 //#define TRACE
 //#define DEBUG
 
@@ -670,6 +674,36 @@ void PWMDcMotor::startGoDistanceMillimeter(uint8_t aRequestedSpeedPWM, unsigned 
 #endif // !defined(USE_ENCODER_MOTOR_CONTROL)
 
 #if defined(E2END)
+#if defined(_STM32_DEF_) 
+/********************************************************************************************
+ * EEPROM functions
+ * Uses the start of EEPROM for storage of EepromMotorInfoStruct's for motor number 1 to n
+ ********************************************************************************************/
+void PWMDcMotor::readMotorValuesFromEeprom(uint8_t aMotorValuesEepromStorageNumber) {
+    EepromMotorInfoStruct tEepromMotorInfo;
+    EEPROM.get(((aMotorValuesEepromStorageNumber) * sizeof(EepromMotorInfoStruct)), tEepromMotorInfo);
+
+    /*
+     * Overwrite with values if valid
+     */
+    if (tEepromMotorInfo.DriveSpeedPWM < 222 && tEepromMotorInfo.DriveSpeedPWM > 40) {
+        DriveSpeedPWM = tEepromMotorInfo.DriveSpeedPWM;
+        if (tEepromMotorInfo.SpeedPWMCompensation < 24) {
+            SpeedPWMCompensation = tEepromMotorInfo.SpeedPWMCompensation;
+        }
+    }
+    MotorControlValuesHaveChanged = true;
+}
+
+void PWMDcMotor::writeMotorValuesToEeprom(uint8_t aMotorValuesEepromStorageNumber) {
+    EepromMotorInfoStruct tEepromMotorInfo;
+    tEepromMotorInfo.DriveSpeedPWM = DriveSpeedPWM;
+    tEepromMotorInfo.SpeedPWMCompensation = SpeedPWMCompensation;
+
+    EEPROM.put(((aMotorValuesEepromStorageNumber) * sizeof(EepromMotorInfoStruct)), tEepromMotorInfo);
+
+}
+#else // (_STM32_DEF_) 
 /********************************************************************************************
  * EEPROM functions
  * Uses the start of EEPROM for storage of EepromMotorInfoStruct's for motor number 1 to n
@@ -699,6 +733,7 @@ void PWMDcMotor::writeMotorValuesToEeprom(uint8_t aMotorValuesEepromStorageNumbe
     eeprom_write_block((void*) &tEepromMotorInfo, (void*) ((aMotorValuesEepromStorageNumber) * sizeof(EepromMotorInfoStruct)),
             sizeof(EepromMotorInfoStruct));
 }
+#endif
 #endif // defined(E2END)
 
 void PWMDcMotor::printValues(Print *aSerial) {

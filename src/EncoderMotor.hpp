@@ -45,7 +45,7 @@ EncoderMotor *sPointerForInt0ISR;
 EncoderMotor *sPointerForInt1ISR;
 
 EncoderMotor::EncoderMotor() : // @suppress("Class members should be properly initialized")
-                               PWMDcMotor()
+                               PWMDcMotor() , stopFlag(false)
 {
 #ifdef ENABLE_MOTOR_LIST_FUNCTIONS
     AddToMotorList();
@@ -384,6 +384,15 @@ void EncoderMotor::synchronizeMotor(EncoderMotor *aOtherMotorControl, unsigned i
     }
 }
 
+void EncoderMotor::wheelGoDistanceTicks(int aRequestedDistanceTicks, uint8_t aRequestedSpeedPWM, uint8_t aRequestedDirection)
+{
+    stopFlag = true;
+    startCount = 0;
+    stopCount = aRequestedDistanceTicks;
+    // EncoderCount;
+    PWMDcMotor::setSpeedPWM(aRequestedSpeedPWM, aRequestedDirection);
+}
+
 /*************************
  * Direct motor control
  *************************/
@@ -648,15 +657,22 @@ void EncoderMotor::handleEncoderInterrupt()
 void EncoderMotor::ISR0()
 {
     sPointerForInt0ISR->handleEncoderInterrupt();
+    if (sPointerForInt0ISR->stopFlag)
+    {
+        sPointerForInt0ISR->PWMDcMotor::stop(MOTOR_BRAKE);
+    }
 }
 
 // ISR for PIN PD3 / LEFT
 void EncoderMotor::ISR1()
 {
     sPointerForInt1ISR->handleEncoderInterrupt();
+    if (sPointerForInt1ISR->stopFlag)
+    {
+        sPointerForInt1ISR->PWMDcMotor::stop(MOTOR_BRAKE);
+    }
 }
 //#endif
-
 
 #ifdef ENABLE_MOTOR_LIST_FUNCTIONS
 /*
