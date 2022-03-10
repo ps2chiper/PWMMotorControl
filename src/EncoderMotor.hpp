@@ -45,7 +45,7 @@ EncoderMotor *sPointerForInt0ISR;
 EncoderMotor *sPointerForInt1ISR;
 
 EncoderMotor::EncoderMotor() : // @suppress("Class members should be properly initialized")
-                               PWMDcMotor() , stopFlag(false)
+                               PWMDcMotor(), stopFlag(false)
 {
 #ifdef ENABLE_MOTOR_LIST_FUNCTIONS
     AddToMotorList();
@@ -415,29 +415,6 @@ void EncoderMotor::initEncoderControlValues()
     LastEncoderInterruptMillis = millis() - ENCODER_SENSOR_RING_MILLIS - 1;
 }
 
-/***************************************************
- * Encoder functions
- ***************************************************/
-/*
- * Attaches INT0 or INT1 interrupt to this EncoderMotor
- * Interrupt is enabled on rising edges
- * We can not use both edges since the on and off times of the opto interrupter are too different
- * aInterruptNumber can be one of INT0 (at pin D2) or INT1 (at pin D3) for Atmega328
- */
-void EncoderMotor::attachEncoderInterrupt(uint8_t aInterruptNumber)
-{
-    if (aInterruptNumber == RIGHT_MOTOR_INTERRUPT)
-    {
-        sPointerForInt0ISR = this;
-        attachInterrupt(digitalPinIsValid(aInterruptNumber), ISR0, RISING);
-    }
-    else if (aInterruptNumber == LEFT_MOTOR_INTERRUPT)
-    {
-        sPointerForInt1ISR = this;
-        attachInterrupt(digitalPinIsValid(aInterruptNumber), ISR1, RISING);
-    }
-}
-
 /*
  * Reset EncoderInterruptDeltaMillis, EncoderInterruptMillisArray, MillisArrayIndex and AverageSpeedIsValid
  */
@@ -603,6 +580,7 @@ void IRAM_ATTR EncoderMotor::handleEncoderInterrupt()
 #else
 void EncoderMotor::handleEncoderInterrupt()
 {
+    Serial.print("handleEncoderInterrupt");
 #endif
     long tMillis = millis();
     unsigned long tDeltaMillis = tMillis - LastEncoderInterruptMillis;
@@ -651,28 +629,64 @@ void EncoderMotor::handleEncoderInterrupt()
 /*
  * Enable both interrupts INT0/D2 or INT1/D3
  */
+void EncoderMotor::attachEncoderInterrupt(uint8_t aInterruptNumber)
+{
+    attachEncoderInterrupt(digitalPinToInterrupt(aInterruptNumber), this);
+}
 
-//#if defined(INT0_vect)
-// ISR for PIN PD2 / RIGHT
+/***************************************************
+ * Encoder functions
+ ***************************************************/
+/*
+ * Attaches INT0 or INT1 interrupt to this EncoderMotor
+ * Interrupt is enabled on rising edges
+ * We can not use both edges since the on and off times of the opto interrupter are too different
+ * aInterruptNumber can be one of INT0 (at pin D2) or INT1 (at pin D3) for Atmega328
+ */
+void EncoderMotor::attachEncoderInterrupt(uint8_t aInterruptNumber, EncoderMotor *ptr)
+{
+    Serial.print("attachEncoderInterrupt: ");
+    Serial.println(aInterruptNumber);
+
+    if (aInterruptNumber == RIGHT_MOTOR_INTERRUPT)
+    {
+        sPointerForInt0ISR = ptr;
+        attachInterrupt(aInterruptNumber, ISR0, RISING);
+    }
+    else if (aInterruptNumber == LEFT_MOTOR_INTERRUPT)
+    {
+        sPointerForInt1ISR = ptr;
+        attachInterrupt(aInterruptNumber, ISR1, RISING);
+    }
+}
+
 void EncoderMotor::ISR0()
 {
+    Serial.print("Right Interrupt: ");
     sPointerForInt0ISR->handleEncoderInterrupt();
-    if (sPointerForInt0ISR->stopFlag)
+    Serial.println(sPointerForInt0ISR->startCount);
+    sPointerForInt0ISR->startCount++;
+     if (sPointerForInt0ISR->stopFlag && sPointerForInt0ISR->startCount >= sPointerForInt0ISR->stopCount)
     {
-        sPointerForInt0ISR->PWMDcMotor::stop(MOTOR_BRAKE);
+        sPointerForInt0ISR->stopFlag = false;
+        Serial.println("Right Wheel Stop!");
+        sPointerForInt0ISR->stop(MOTOR_BRAKE);
     }
 }
 
-// ISR for PIN PD3 / LEFT
 void EncoderMotor::ISR1()
 {
+    Serial.print("Left Interrupt: ");
     sPointerForInt1ISR->handleEncoderInterrupt();
-    if (sPointerForInt1ISR->stopFlag)
+    Serial.println(sPointerForInt1ISR->startCount);
+    sPointerForInt1ISR->startCount++;
+    if (sPointerForInt1ISR->stopFlag && sPointerForInt1ISR->startCount >= sPointerForInt1ISR->stopCount)
     {
-        sPointerForInt1ISR->PWMDcMotor::stop(MOTOR_BRAKE);
+        sPointerForInt1ISR->stopFlag = false;
+        Serial.println("Left Wheel Stop!");
+        sPointerForInt1ISR->stop(MOTOR_BRAKE);
     }
 }
-//#endif
 
 #ifdef ENABLE_MOTOR_LIST_FUNCTIONS
 /*

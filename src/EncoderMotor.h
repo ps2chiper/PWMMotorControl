@@ -93,9 +93,12 @@ public:
 #else
     void handleEncoderInterrupt();
 #endif
+
+    static void attachEncoderInterrupt(uint8_t aEncoderInterruptPinNumber, EncoderMotor *ptr);
+    void attachEncoderInterrupt(uint8_t aEncoderInterruptPinNumber);
     static void ISR0();
     static void ISR1();
-    void attachEncoderInterrupt(uint8_t aEncoderInterruptPinNumber);
+
 
     uint8_t getDirection();
     unsigned int getDistanceMillimeter();

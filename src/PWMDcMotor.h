@@ -37,6 +37,7 @@
 #define PWMDCMOTOR_H_
 
 #include <stdint.h>
+#include "RobotCarPinDefinitionsAndMore.h"
 
 #define VERSION_PWMMOTORCONTROL "2.0.0"
 #define VERSION_PWMMOTORCONTROL_MAJOR 2

@@ -50,6 +50,7 @@ CarPWMMotorControl RobotCarPWMMotorControl;
 
 CarPWMMotorControl::CarPWMMotorControl()
 { // @suppress("Class members should be properly initialized")
+    //Serial.println("Constructor!");
 }
 
 #ifdef USE_MPU6050_IMU
@@ -91,6 +92,7 @@ void CarPWMMotorControl::init()
 #endif
 
 #else // USE_ADAFRUIT_MOTOR_SHIELD
+
 void CarPWMMotorControl::init(uint8_t aRightMotorForwardPin, uint8_t aRightMotorBackwardPin, uint8_t aRightPWMPin,
                               uint8_t aLeftMotorForwardPin, uint8_t LeftMotorBackwardPin, uint8_t aLeftMotorPWMPin)
 {
