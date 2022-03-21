@@ -59,6 +59,7 @@ class EncoderMotor : public PWMDcMotor
 {
 public:
     EncoderMotor();
+    //virtual ~EncoderMotor();
 #ifdef USE_ADAFRUIT_MOTOR_SHIELD
     void init(uint8_t aMotorNumber);
     void init(uint8_t aMotorNumber, uint8_t aInterruptNumber);
@@ -68,7 +69,7 @@ public:
     void init(uint8_t aForwardPin, uint8_t aBackwardPin, uint8_t aPWMPin);
     void init(uint8_t aForwardPin, uint8_t aBackwardPin, uint8_t aPWMPin, uint8_t aInterruptNumber);
 #endif
-    //    virtual ~EncoderMotor();
+    
 
     /*
      * Functions for going a fixed distance, they "overwrite" PWMDCMotor functions
@@ -94,7 +95,6 @@ public:
     void handleEncoderInterrupt();
 #endif
 
-    static void attachEncoderInterrupt(uint8_t aEncoderInterruptPinNumber, EncoderMotor *ptr);
     void attachEncoderInterrupt(uint8_t aEncoderInterruptPinNumber);
     static void ISR0();
     static void ISR1();
